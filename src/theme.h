@@ -51,33 +51,74 @@ inline Theme createDefaultTheme() {
     return theme;
 }
 
-// Cool blue theme
+// Cool icy blue theme
+// Palette: #09479A, #6190BA, #E8ECEF, #A0C1D0, #788D9E
+// Colors animate from bright (light) at 0 to base (dark) at 1
 inline Theme createCoolTheme() {
     Theme theme;
-    theme.name = "Cool";
-    theme.background = math::Vec3(0.02f, 0.05f, 0.1f);
+    theme.name = "Ice";
+    theme.background = math::Vec3(0.910f, 0.922f, 0.937f);  // #E8ECEF light gray
 
-    float saturation = 0.7f;
-    float value = 0.9f;
+    // Deep blue #09479A (8, 70, 154)
+    math::Vec3 deepBlue(0.031f, 0.275f, 0.604f);
+    // Medium blue #6190BA (96, 144, 186)
+    math::Vec3 mediumBlue(0.376f, 0.565f, 0.729f);
+    // Light blue #A0C1D0 (160, 193, 207)
+    math::Vec3 lightBlue(0.627f, 0.757f, 0.812f);
+    // Gray-blue #788D9E (119, 140, 158)
+    math::Vec3 grayBlue(0.467f, 0.549f, 0.620f);
 
-    theme.seconds.base = math::hsvToRgb(0.55f, saturation * 0.6f, value * 0.7f);
-    theme.seconds.bright = math::hsvToRgb(0.55f, saturation, value);
+    // Assign colors: bright (start/reset) -> base (end/full)
+    theme.seconds.bright = lightBlue;
+    theme.seconds.base = deepBlue;
 
-    theme.minutes.base = math::hsvToRgb(0.6f, saturation * 0.6f, value * 0.7f);
-    theme.minutes.bright = math::hsvToRgb(0.6f, saturation, value);
+    theme.minutes.bright = lightBlue;
+    theme.minutes.base = mediumBlue;
 
-    theme.hours.base = math::hsvToRgb(0.65f, saturation * 0.6f, value * 0.7f);
-    theme.hours.bright = math::hsvToRgb(0.65f, saturation, value);
+    theme.hours.bright = lightBlue;
+    theme.hours.base = grayBlue;
 
-    theme.dayOfMonth.base = math::hsvToRgb(0.5f, saturation * 0.6f, value * 0.7f);
-    theme.dayOfMonth.bright = math::hsvToRgb(0.5f, saturation, value);
+    theme.dayOfMonth.bright = lightBlue;
+    theme.dayOfMonth.base = mediumBlue;
 
-    theme.month.base = math::hsvToRgb(0.45f, saturation * 0.6f, value * 0.7f);
-    theme.month.bright = math::hsvToRgb(0.45f, saturation, value);
+    theme.month.bright = lightBlue;
+    theme.month.base = deepBlue;
 
-    theme.textColor = math::Vec3(0.9f, 0.95f, 1.0f);
+    theme.textColor = math::Vec3(0.910f, 0.922f, 0.937f);  // Light for contrast on dark arcs
 
     return theme;
 }
+
+inline Theme createBlueTheme() {
+    Theme theme;
+    theme.name = "Blue";
+    theme.background = math::Vec3(0.910f, 0.922f, 0.937f);  // #E8ECEF light gray
+
+    // Deep blue #09479A (8, 70, 154)
+    math::Vec3 deepBlue(0.031f, 0.275f, 0.604f);
+    // Medium blue #6190BA (96, 144, 186)
+    math::Vec3 mediumBlue(0.376f, 0.565f, 0.729f);
+
+    // Assign colors: bright (start/reset) -> base (end/full)
+    theme.seconds.bright = mediumBlue;
+    theme.seconds.base = deepBlue;
+
+    theme.minutes.bright = mediumBlue;
+    theme.minutes.base = deepBlue;
+
+    theme.hours.bright = mediumBlue;
+    theme.hours.base = deepBlue;
+
+    theme.dayOfMonth.bright = mediumBlue;
+    theme.dayOfMonth.base = deepBlue;
+
+    theme.month.bright = mediumBlue;
+    theme.month.base = deepBlue;
+
+    theme.textColor = math::Vec3(0.910f, 0.922f, 0.937f);  // Light for contrast on dark arcs
+
+    return theme;
+}
+
 
 } // namespace polarclock

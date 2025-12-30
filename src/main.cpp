@@ -30,10 +30,22 @@ struct AppState {
 
 AppState g_state;
 
+static bool firstFrame = true;
+
 void mainLoop() {
     auto currentTime = std::chrono::high_resolution_clock::now();
     float deltaTime = std::chrono::duration<float>(currentTime - g_state.lastTime).count();
     g_state.lastTime = currentTime;
+
+    // On first frame, reset deltaTime to ensure animation starts fresh
+    if (firstFrame) {
+        deltaTime = 0.016f;  // ~60fps
+        firstFrame = false;
+    }
+    // Cap deltaTime to prevent animation skip after tab sleep
+    else if (deltaTime > 0.1f) {
+        deltaTime = 0.1f;
+    }
 
     // Check for resize
 #ifdef __EMSCRIPTEN__
@@ -135,14 +147,15 @@ int main() {
     }
     LOG("Renderer initialized successfully");
 
-    g_state.clock.setTheme(polarclock::createDefaultTheme());
-    g_state.renderer.setTheme(polarclock::createDefaultTheme());
+    // g_state.clock.setTheme(polarclock::createDefaultTheme());
+    // g_state.renderer.setTheme(polarclock::createDefaultTheme());
 
     g_state.lastTime = std::chrono::high_resolution_clock::now();
 
     LOG("Starting main loop...");
 #ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop(emscriptenMainLoop, 0, 1);
+    // Limit to 60fps to reduce CPU usage
+    emscripten_set_main_loop(emscriptenMainLoop, 60, 1);
 #else
     while (!glfwWindowShouldClose(g_state.window)) {
         mainLoop();

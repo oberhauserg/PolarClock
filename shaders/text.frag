@@ -11,5 +11,7 @@ out vec4 fragColor;
 
 void main() {
     float alpha = texture(u_fontTexture, v_texCoord).r;
+    // Slightly boost contrast to reduce halo while preserving antialiasing
+    alpha = smoothstep(0.0, 0.5, alpha);
     fragColor = vec4(u_textColor, alpha * u_alpha);
 }

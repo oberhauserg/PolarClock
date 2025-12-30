@@ -304,4 +304,15 @@ float TextRenderer::getTextWidth(const std::string& text, float scale) const {
     return width * scale;
 }
 
+float TextRenderer::getTextHeight(const std::string& text, float scale) const {
+    float height = 0;
+    for (char c : text) {
+        auto it = m_glyphs.find(c);
+        if (it != m_glyphs.end()) {
+            height = std::max(height, it->second.height);
+        }
+    }
+    return height * scale;
+}
+
 } // namespace polarclock

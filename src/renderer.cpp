@@ -19,7 +19,7 @@ bool Renderer::init(int width, int height) {
         return false;
     }
 
-    if (!m_textRenderer.init("/assets/Roboto-Regular.ttf", 24.0f)) {
+    if (!m_textRenderer.init("/assets/RobotoMono-Bold.ttf", 20.0f)) {
         return false;
     }
 
@@ -54,14 +54,14 @@ float Renderer::calculateMinArcValue(const Ring& ring) {
     // Calculate text properties
     float ringThickness = ring.outerRadius - ring.innerRadius;
     float textScale = ringThickness * 0.020f;
-    float radius = (ring.innerRadius + ring.outerRadius) / 2.0f;
+    float radius = ring.outerRadius - m_textRenderer.getTextHeight(ring.valueText, textScale);
 
     // Calculate how much angular space the text needs
     float textWidth = m_textRenderer.getTextWidth(ring.valueText, textScale);
     float textAngularSpan = textWidth / radius;
 
     // Add padding on both sides
-    float padding = ringThickness * 0.5f / radius;
+    float padding = ringThickness * 0.1f / radius;
     float minSweepNeeded = textAngularSpan + padding * 2.0f;
 
     // Convert to 0-1 range (sweep / TAU)
@@ -69,8 +69,9 @@ float Renderer::calculateMinArcValue(const Ring& ring) {
 }
 
 void Renderer::render(const PolarClock& clock) {
-    // Clear with background color
-    glClearColor(m_theme.background.x, m_theme.background.y, m_theme.background.z, 1.0f);
+    // Clear with background color from clock's theme
+    const auto& bg = clock.getTheme().background;
+    glClearColor(bg.x, bg.y, bg.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Enable blending for text
@@ -82,11 +83,20 @@ void Renderer::render(const PolarClock& clock) {
         float minValue = calculateMinArcValue(ring);
         float effectiveValue = std::max(ring.currentValue, minValue);
 
-        // Render arc with effective value
+        // Interpolate color from bright (at 0) to base (at 1)
+        // This makes rings reset to bright/merry colors on NYE
+        float t = ring.currentValue;
+        math::Vec3 arcColor(
+            ring.colors.bright.x + (ring.colors.base.x - ring.colors.bright.x) * t,
+            ring.colors.bright.y + (ring.colors.base.y - ring.colors.bright.y) * t,
+            ring.colors.bright.z + (ring.colors.base.z - ring.colors.bright.z) * t
+        );
+
+        // Render arc with effective value and interpolated color
         m_arcRenderer.renderArc(
             ring.innerRadius, ring.outerRadius,
             effectiveValue,
-            ring.colors.base,
+            arcColor,
             m_projection
         );
 
@@ -102,10 +112,11 @@ void Renderer::renderLabel(const Ring& ring, float effectiveValue) {
     float ringThickness = ring.outerRadius - ring.innerRadius;
     float textScale = ringThickness * 0.020f;
 
-    // Position at center of ring thickness
-    float radius = (ring.innerRadius + ring.outerRadius) / 2.0f;
-
     std::string label = ring.valueText;
+
+    // Position at center of ring thickness
+    //float radius = (ring.innerRadius + ring.outerRadius) / 2.0f;
+    float radius = ring.outerRadius - m_textRenderer.getTextHeight(label, textScale);
 
     // Calculate how much angular space the text needs
     float textWidth = m_textRenderer.getTextWidth(label, textScale);
@@ -117,7 +128,7 @@ void Renderer::renderLabel(const Ring& ring, float effectiveValue) {
     float arcEndAngle = startAngle - sweepAngle;
 
     // Center the text near the end of the arc
-    float padding = ringThickness * 0.5f / radius;
+    float padding = ringThickness * 0.1f / radius;
     float textCenterAngle = arcEndAngle + textAngularSpan / 2.0f + padding;
 
     // Use dark color for contrast against bright arc

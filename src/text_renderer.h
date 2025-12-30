@@ -33,6 +33,7 @@ public:
                          bool clockwise = true, float alpha = 1.0f);
 
     float getTextWidth(const std::string& text, float scale) const;
+    float getTextHeight(const std::string& text, float scale) const;
 
 private:
     Shader m_shader;

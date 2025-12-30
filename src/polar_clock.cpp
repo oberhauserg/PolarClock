@@ -5,6 +5,15 @@
 
 namespace polarclock {
 
+static int getDaysInMonth(int month, int year) {
+    static const int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (month == 2) {
+        bool isLeap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+        return isLeap ? 29 : 28;
+    }
+    return days[month - 1];
+}
+
 PolarClock::PolarClock()
     : m_seconds(0)
     , m_minutes(0)
@@ -13,12 +22,12 @@ PolarClock::PolarClock()
     , m_month(1)
     , m_year(2024)
     , m_fractionalSecond(0)
-    , m_animationSpeed(8.0f)
+    , m_animationSpeed(2.0f)
 {
     // Configure rings from inner to outer
     float baseRadius = 0.15f;
     float ringWidth = 0.08f;
-    float gap = 0.02f;
+    float gap = 0.01f;
 
     for (int i = 0; i < 5; ++i) {
         m_rings[i].innerRadius = baseRadius + i * (ringWidth + gap);
@@ -27,36 +36,70 @@ PolarClock::PolarClock()
         m_rings[i].targetValue = 0.0f;
     }
 
-    m_rings[0].type = RingType::Seconds;
-    m_rings[0].label = "SECONDS";
-    m_rings[1].type = RingType::Minutes;
-    m_rings[1].label = "MINUTES";
+    m_rings[0].type = RingType::Month;
+    m_rings[0].label = "MONTH";
+    m_rings[1].type = RingType::DayOfMonth;
+    m_rings[1].label = "DAY";
     m_rings[2].type = RingType::Hours;
     m_rings[2].label = "HOURS";
-    m_rings[3].type = RingType::DayOfMonth;
-    m_rings[3].label = "DAY";
-    m_rings[4].type = RingType::Month;
-    m_rings[4].label = "MONTH";
+    m_rings[3].type = RingType::Minutes;
+    m_rings[3].label = "MINUTES";
+    m_rings[4].type = RingType::Seconds;
+    m_rings[4].label = "SECONDS";
 
     // Set default theme
     setTheme(createDefaultTheme());
 
-    // Initialize time
+    // Initialize time and target values
+    // currentValue stays at 0 so rings animate in on startup
     updateTime();
     updateRingValues();
-
-    // Start with current values (no animation on load)
-    for (auto& ring : m_rings) {
-        ring.currentValue = ring.targetValue;
-    }
 }
 
 void PolarClock::setTheme(const Theme& theme) {
+    m_theme = theme;
     m_rings[0].colors = theme.seconds;
     m_rings[1].colors = theme.minutes;
     m_rings[2].colors = theme.hours;
     m_rings[3].colors = theme.dayOfMonth;
     m_rings[4].colors = theme.month;
+}
+
+void PolarClock::setValue(RingType type, float value, int text_value)
+{
+    auto pad2 = [](int n) {
+        return (n < 10 ? "0" : "") + std::to_string(n);
+    };
+
+    for(auto& ring: m_rings)
+    {
+        if(ring.type == type)
+        {
+            ring.targetValue = value;
+
+            switch(type)
+            {
+                case RingType::Hours:
+                    ring.valueText = pad2(text_value) + " hours";
+                    break;
+                case RingType::Minutes:
+                    ring.valueText = pad2(text_value) + " minutes";
+                    break;
+                case RingType::Seconds:
+                    ring.valueText = pad2(text_value) + " seconds";
+                    break;
+                case RingType::DayOfMonth:
+                    ring.valueText = pad2(text_value) + " days";
+                    break;
+                case RingType::Month:
+                    static const char* monthNames[] = {
+                        "January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December"
+                    };
+                    ring.valueText = monthNames[text_value - 1];
+            }
+        }
+    }
 }
 
 void PolarClock::update(float deltaTime) {
@@ -93,68 +136,44 @@ void PolarClock::updateRingValues() {
         return (n < 10 ? "0" : "") + std::to_string(n);
     };
 
+
+    // Each ring cascades from the previous one, so all rings move continuously.
+    // secondsValue represents fraction of minute elapsed (0-1)
+    // minutesValue represents fraction of hour elapsed (0-1), including seconds contribution
+    // And so on...
+
     // Seconds: 0-59, include fractional for smoothness
     float secondsValue = (m_seconds + m_fractionalSecond) / 60.0f;
-    m_rings[0].targetValue = secondsValue;
-    m_rings[0].valueText = pad2(m_seconds) + " seconds";
+    setValue(RingType::Seconds, secondsValue, m_seconds);
 
-    // Minutes: 0-59
-    float minutesValue = (m_minutes + m_seconds / 60.0f) / 60.0f;
-    m_rings[1].targetValue = minutesValue;
-    m_rings[1].valueText = pad2(m_minutes) + " minutes";
+    // Minutes: cascade from seconds
+    float minutesValue = (m_minutes + secondsValue) / 60.0f;
+    setValue(RingType::Minutes, minutesValue, m_minutes);
 
-    // Hours: 0-23 (24-hour clock)
-    float hoursValue = (m_hours + m_minutes / 60.0f) / 24.0f;
-    m_rings[2].targetValue = hoursValue;
-    m_rings[2].valueText = pad2(m_hours) + " hours";
+    // Hours: cascade from minutes (24-hour clock)
+    float hoursValue = (m_hours + minutesValue) / 24.0f;
+    setValue(RingType::Hours, hoursValue, m_hours);
 
-    // Day of month: 1-31 (varies by month, but we use 31 for consistency)
-    float daysInMonth = 31.0f;  // Could calculate actual days, but 31 works visually
-    float dayValue = m_dayOfMonth / daysInMonth;
-    m_rings[3].targetValue = dayValue;
-    m_rings[3].valueText = pad2(m_dayOfMonth) + " days";
-
-    // Month: 1-12
-    float monthValue = m_month / 12.0f;
-    m_rings[4].targetValue = monthValue;
-
-    // Month names
-    static const char* monthNames[] = {
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    };
-    m_rings[4].valueText = monthNames[m_month - 1];
+    // Day of month: cascade from hours, use actual days in current month
+    int daysInMonth = getDaysInMonth(m_month, m_year);
+    float dayValue = ((m_dayOfMonth - 1) + hoursValue) / static_cast<float>(daysInMonth);
+    setValue(RingType::DayOfMonth, dayValue, m_dayOfMonth);
+    
+    // Month: cascade from days (1-12)
+    float monthValue = ((m_month - 1) + dayValue) / 12.0f;
+    setValue(RingType::Month, monthValue, m_month);
 }
 
 float PolarClock::animateValue(float current, float target, float deltaTime) {
     float diff = target - current;
+    float speed = m_animationSpeed * deltaTime;
 
-    // If the difference is very large negative (like going from 0.98 to 0.01),
-    // we're wrapping around - sweep backwards quickly to reset
-    if (diff < -0.5f) {
-        // Animate backward quickly (sweep back to 0)
-        float resetSpeed = m_animationSpeed * 1.0f;  // Faster for reset
-        current -= resetSpeed * deltaTime;
-        if (current < 0.0f) {
-            current = 0.0f;
-        }
-    } else if (diff > 0.5f) {
-        // Rare case: animate forward through 1.0
-        current += m_animationSpeed * deltaTime;
-        if (current >= 1.0f) {
-            current -= 1.0f;
-        }
-    } else {
-        // Normal interpolation
-        float speed = m_animationSpeed * deltaTime;
-        if (std::abs(diff) < speed) {
-            current = target;
-        } else {
-            current += (diff > 0 ? speed : -speed);
-        }
+    // Simple linear interpolation - always move toward target
+    if (std::abs(diff) <= speed) {
+        return target;
     }
 
-    return current;
+    return current + (diff > 0 ? speed : -speed);
 }
 
 } // namespace polarclock

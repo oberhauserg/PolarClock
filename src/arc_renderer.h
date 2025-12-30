@@ -22,9 +22,6 @@ public:
 private:
     void generateArcGeometry(float innerRadius, float outerRadius, float endAngle,
                              std::vector<float>& vertices);
-    void generateQuarterCircle(float centerX, float centerY, float radius,
-                               float startAngle, float endAngle,
-                               std::vector<float>& vertices);
 
     Shader m_shader;
     GLuint m_vao;

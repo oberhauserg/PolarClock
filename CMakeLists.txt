@@ -27,25 +27,27 @@ if(EMSCRIPTEN)
     # Emscripten build settings
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
-    # Emscripten compile and link flags
-    set(EM_FLAGS
+    # Emscripten link-only flags
+    set(EM_LINK_FLAGS
         "-s USE_GLFW=3"
         "-s USE_WEBGL2=1"
         "-s FULL_ES3=1"
         "-s WASM=1"
+        "-s INITIAL_MEMORY=16777216"
         "-s ALLOW_MEMORY_GROWTH=1"
         "-s NO_EXIT_RUNTIME=1"
+        "-s MIN_WEBGL_VERSION=2"
+        "-s MAX_WEBGL_VERSION=2"
         "--preload-file ${CMAKE_SOURCE_DIR}/assets@/assets"
         "--preload-file ${CMAKE_SOURCE_DIR}/shaders@/shaders"
         "--shell-file ${CMAKE_SOURCE_DIR}/web/shell.html"
     )
 
-    # Join flags for compile and link
-    string(JOIN " " EM_FLAGS_STR ${EM_FLAGS})
+    # Join flags for linking only
+    string(JOIN " " EM_LINK_FLAGS_STR ${EM_LINK_FLAGS})
 
     set_target_properties(${PROJECT_NAME} PROPERTIES
-        COMPILE_FLAGS "${EM_FLAGS_STR}"
-        LINK_FLAGS "${EM_FLAGS_STR}"
+        LINK_FLAGS "${EM_LINK_FLAGS_STR}"
     )
 
     message(STATUS "Building for Emscripten (WebAssembly)")

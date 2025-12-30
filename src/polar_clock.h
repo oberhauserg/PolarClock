@@ -12,8 +12,7 @@ enum class RingType {
     Minutes,
     Hours,
     DayOfMonth,
-    Month,
-    COUNT
+    Month
 };
 
 struct Ring {
@@ -36,6 +35,7 @@ public:
 
     const Ring& getRing(RingType type) const { return m_rings[static_cast<size_t>(type)]; }
     const std::array<Ring, 5>& getRings() const { return m_rings; }
+    const Theme& getTheme() const { return m_theme; }
 
     // Get current time values for display
     int getSeconds() const { return m_seconds; }
@@ -50,7 +50,10 @@ private:
     void updateRingValues();
     float animateValue(float current, float target, float deltaTime);
 
+    void setValue(RingType type, float value, int text_value);
+
     std::array<Ring, 5> m_rings;
+    Theme m_theme;
 
     // Current time values
     int m_seconds;

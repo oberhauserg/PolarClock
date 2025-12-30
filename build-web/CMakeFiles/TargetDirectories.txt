@@ -1,3 +1,0 @@
-/home/goberhauser/Projects/PolarClock/build-web/CMakeFiles/PolarClock.dir
-/home/goberhauser/Projects/PolarClock/build-web/CMakeFiles/edit_cache.dir
-/home/goberhauser/Projects/PolarClock/build-web/CMakeFiles/rebuild_cache.dir
