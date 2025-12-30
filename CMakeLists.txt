@@ -13,6 +13,10 @@ set(SOURCES
     src/arc_renderer.cpp
     src/polar_clock.cpp
     src/text_renderer.cpp
+    src/platform/platform.cpp
+    src/platform/desktop_platform.cpp
+    src/platform/emscripten_platform.cpp
+    src/platform/android_platform.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

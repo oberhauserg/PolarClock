@@ -1,204 +1,62 @@
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include <emscripten/html5.h>
-#include <GLES3/gl3.h>
-#define LOG(msg) emscripten_log(EM_LOG_CONSOLE, "%s", msg)
-#define LOG_ERR(msg) emscripten_log(EM_LOG_ERROR, "%s", msg)
-#else
-#include <GL/glew.h>
-#define LOG(msg) std::cout << msg << std::endl
-#define LOG_ERR(msg) std::cerr << msg << std::endl
-#endif
-
-#include <GLFW/glfw3.h>
-#include <iostream>
-#include <chrono>
-
+#include "platform/platform.h"
 #include "renderer.h"
 #include "polar_clock.h"
-#include "theme.h"
 
-// Global state for Emscripten main loop
-struct AppState {
-    GLFWwindow* window;
-    polarclock::Renderer renderer;
-    polarclock::PolarClock clock;
-    std::chrono::high_resolution_clock::time_point lastTime;
-    int width;
-    int height;
-};
-
-AppState g_state;
-
-static bool firstFrame = true;
-
-void mainLoop() {
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float deltaTime = std::chrono::duration<float>(currentTime - g_state.lastTime).count();
-    g_state.lastTime = currentTime;
-
-    // On first frame, reset deltaTime and force a resize
-    if (firstFrame) {
-        deltaTime = 0.016f;  // ~60fps
-        firstFrame = false;
-#ifdef __EMSCRIPTEN__
-        // Force resize on first frame to ensure correct resolution
-        int w, h;
-        emscripten_get_canvas_element_size("#canvas", &w, &h);
-        g_state.width = w;
-        g_state.height = h;
-        g_state.renderer.resize(w, h);
-#endif
-    }
-    // Cap deltaTime to prevent animation skip after tab sleep
-    else if (deltaTime > 0.1f) {
-        deltaTime = 0.1f;
-    }
-
-    // Check for resize
-#ifdef __EMSCRIPTEN__
-    int newWidth, newHeight;
-    emscripten_get_canvas_element_size("#canvas", &newWidth, &newHeight);
-    if (newWidth != g_state.width || newHeight != g_state.height) {
-        g_state.width = newWidth;
-        g_state.height = newHeight;
-        g_state.renderer.resize(newWidth, newHeight);
-    }
-#else
-    int newWidth, newHeight;
-    glfwGetFramebufferSize(g_state.window, &newWidth, &newHeight);
-    if (newWidth != g_state.width || newHeight != g_state.height) {
-        g_state.width = newWidth;
-        g_state.height = newHeight;
-        g_state.renderer.resize(newWidth, newHeight);
-    }
-#endif
-
-    g_state.clock.update(deltaTime);
-    g_state.renderer.render(g_state.clock);
-
-    glfwSwapBuffers(g_state.window);
-    glfwPollEvents();
-}
-
-#ifdef __EMSCRIPTEN__
-void emscriptenMainLoop() {
-    mainLoop();
-}
-#endif
+#include <iostream>
+#include <memory>
 
 int main() {
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
+    // Create platform-specific implementation
+    std::unique_ptr<polarclock::Platform> platform(polarclock::Platform::create());
+
+    std::cout << "Platform: " << platform->getName() << std::endl;
+
+    if (!platform->init(800, 800, "Polar Clock")) {
+        std::cerr << "Failed to initialize platform" << std::endl;
         return -1;
     }
 
-    // Set OpenGL version hints
-#ifdef __EMSCRIPTEN__
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-#else
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // Use compatibility profile for better driver support
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-    #ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    #endif
-#endif
+    // Initialize renderer
+    polarclock::Renderer renderer;
+    int width, height;
+    platform->getFramebufferSize(width, height);
 
-    glfwWindowHint(GLFW_SAMPLES, 4);  // MSAA
-
-    // Try to work around Wayland/libdecor issues
-    glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
-
-    g_state.width = 800;
-    g_state.height = 800;
-
-#ifdef __EMSCRIPTEN__
-    // Get canvas size from HTML
-    emscripten_get_canvas_element_size("#canvas", &g_state.width, &g_state.height);
-#endif
-
-    g_state.window = glfwCreateWindow(g_state.width, g_state.height, "Polar Clock", nullptr, nullptr);
-    if (!g_state.window) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
-        const char* description;
-        #ifndef __EMSCRIPTEN__
-        glfwGetError(&description);
-        if (description) std::cerr << "GLFW Error: " << description << std::endl;
-        #endif
-        glfwTerminate();
+    std::cout << "Initializing renderer..." << std::endl;
+    if (!renderer.init(width, height)) {
+        std::cerr << "Failed to initialize renderer" << std::endl;
         return -1;
     }
+    std::cout << "Renderer initialized successfully" << std::endl;
 
-    glfwMakeContextCurrent(g_state.window);
+    // Initialize clock
+    polarclock::PolarClock clock;
 
-#ifndef __EMSCRIPTEN__
-    // Verify context is current
-    if (glfwGetCurrentContext() != g_state.window) {
-        std::cerr << "Failed to make OpenGL context current" << std::endl;
-        return -1;
-    }
+    // Track last known size for resize detection
+    int lastWidth = width;
+    int lastHeight = height;
 
-    // Initialize GLEW for desktop OpenGL
-    glewExperimental = GL_TRUE;
-    GLenum glewErr = glewInit();
-    // GLEW can report errors even when it works - check if GL actually works
-    if (glewErr != GLEW_OK) {
-        std::cerr << "GLEW warning: " << glewGetErrorString(glewErr) << std::endl;
-    }
-    // Clear any GL errors generated by GLEW
-    while (glGetError() != GL_NO_ERROR) {}
+    std::cout << "Starting main loop..." << std::endl;
 
-    // Verify OpenGL is actually working
-    const char* version = (const char*)glGetString(GL_VERSION);
-    if (!version) {
-        std::cerr << "OpenGL not working - glGetString returned null" << std::endl;
-        return -1;
-    }
-    std::cout << "OpenGL initialized: " << version << std::endl;
-#endif
+    // Run main loop with frame callback
+    platform->runMainLoop([&](float deltaTime) {
+        // Check for resize
+        int newWidth, newHeight;
+        platform->getFramebufferSize(newWidth, newHeight);
+        if (newWidth != lastWidth || newHeight != lastHeight) {
+            lastWidth = newWidth;
+            lastHeight = newHeight;
+            renderer.resize(newWidth, newHeight);
+        }
 
-    // Enable VSync (must be after main loop is set up on Emscripten)
-#ifndef __EMSCRIPTEN__
-    glfwSwapInterval(1);
-#endif
+        // Update and render
+        clock.update(deltaTime);
+        renderer.render(clock);
 
-    // Enable MSAA (not available in WebGL)
-#ifndef __EMSCRIPTEN__
-    glEnable(GL_MULTISAMPLE);
-#endif
+        // Swap and poll
+        platform->swapBuffers();
+        platform->pollEvents();
+    });
 
-    LOG("OpenGL context created");
-    LOG((const char*)glGetString(GL_VERSION));
-
-    LOG("Initializing renderer...");
-    if (!g_state.renderer.init(g_state.width, g_state.height)) {
-        LOG_ERR("Failed to initialize renderer");
-        return -1;
-    }
-    LOG("Renderer initialized successfully");
-
-    // g_state.clock.setTheme(polarclock::createDefaultTheme());
-    // g_state.renderer.setTheme(polarclock::createDefaultTheme());
-
-    g_state.lastTime = std::chrono::high_resolution_clock::now();
-
-    LOG("Starting main loop...");
-#ifdef __EMSCRIPTEN__
-    // Limit to 60fps to reduce CPU usage
-    emscripten_set_main_loop(emscriptenMainLoop, 60, 1);
-#else
-    while (!glfwWindowShouldClose(g_state.window)) {
-        mainLoop();
-    }
-
-    glfwDestroyWindow(g_state.window);
-    glfwTerminate();
-#endif
-
+    platform->shutdown();
     return 0;
 }
