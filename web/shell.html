@@ -19,8 +19,9 @@
         var canvas = document.getElementById('canvas');
         var dpr = window.devicePixelRatio || 1;
         function resize() {
-            canvas.width = window.innerWidth * dpr;
-            canvas.height = window.innerHeight * dpr;
+            // Round to avoid subpixel artifacts from non-integer DPR
+            canvas.width = Math.round(window.innerWidth * dpr);
+            canvas.height = Math.round(window.innerHeight * dpr);
         }
         window.onresize = resize;
         resize();
