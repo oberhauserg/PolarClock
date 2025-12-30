@@ -55,10 +55,12 @@ else()
     # Native build - find dependencies
     find_package(glfw3 3.3 REQUIRED)
     find_package(OpenGL REQUIRED)
+    find_package(GLEW REQUIRED)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
         glfw
         OpenGL::GL
+        GLEW::GLEW
     )
 
     # Copy assets and shaders to build directory for native testing

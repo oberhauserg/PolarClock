@@ -87,16 +87,44 @@ void PolarClock::setValue(RingType type, float value, int text_value)
             switch(type)
             {
                 case RingType::Hours:
-                    ring.valueText = pad2(text_value) + " hours";
+                    if(text_value == 1)
+                    {
+                        ring.valueText = pad2(text_value) + " hour";
+                    }
+                    else
+                    {
+                        ring.valueText = pad2(text_value) + " hours";
+                    }
                     break;
                 case RingType::Minutes:
-                    ring.valueText = pad2(text_value) + " minutes";
+                    if(text_value == 1)
+                    {
+                        ring.valueText = pad2(text_value) + " minute";
+                    }
+                    else
+                    {
+                        ring.valueText = pad2(text_value) + " minutes";
+                    }
                     break;
                 case RingType::Seconds:
-                    ring.valueText = pad2(text_value) + " seconds";
+                    if(text_value == 1)
+                    {
+                        ring.valueText = pad2(text_value) + " second";
+                    }
+                    else
+                    {
+                        ring.valueText = pad2(text_value) + " seconds";
+                    }
                     break;
                 case RingType::DayOfMonth:
-                    ring.valueText = pad2(text_value) + " days";
+                    if(text_value - 1 == 1)
+                    {
+                        ring.valueText = pad2(text_value - 1) + " day";
+                    }
+                    else
+                    {
+                        ring.valueText = pad2(text_value - 1) + " days";
+                    }
                     break;
                 case RingType::Month:
                     static const char* monthNames[] = {

@@ -1,4 +1,5 @@
 #include "text_renderer.h"
+#include "resource_path.h"
 #include <fstream>
 #include <vector>
 #include <iostream>
@@ -112,7 +113,8 @@ bool TextRenderer::init(const std::string& fontPath, float fontSize) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     // Load shader
-    if (!m_shader.loadFromFiles("/shaders/text.vert", "/shaders/text.frag")) {
+    if (!m_shader.loadFromFiles(getResourcePath("shaders/text.vert"),
+                                   getResourcePath("shaders/text.frag"))) {
         return false;
     }
 
