@@ -30,6 +30,8 @@
             antialias: true,
             devicePixelRatio: dpr,
             onRuntimeInitialized: function() {
+                // Re-trigger resize after WebGL context is ready
+                resize();
                 canvas.classList.add('ready');
             }
         };
