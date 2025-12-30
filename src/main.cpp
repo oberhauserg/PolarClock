@@ -37,10 +37,18 @@ void mainLoop() {
     float deltaTime = std::chrono::duration<float>(currentTime - g_state.lastTime).count();
     g_state.lastTime = currentTime;
 
-    // On first frame, reset deltaTime to ensure animation starts fresh
+    // On first frame, reset deltaTime and force a resize
     if (firstFrame) {
         deltaTime = 0.016f;  // ~60fps
         firstFrame = false;
+#ifdef __EMSCRIPTEN__
+        // Force resize on first frame to ensure correct resolution
+        int w, h;
+        emscripten_get_canvas_element_size("#canvas", &w, &h);
+        g_state.width = w;
+        g_state.height = h;
+        g_state.renderer.resize(w, h);
+#endif
     }
     // Cap deltaTime to prevent animation skip after tab sleep
     else if (deltaTime > 0.1f) {
