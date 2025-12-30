@@ -19,7 +19,7 @@ bool Renderer::init(int width, int height) {
         return false;
     }
 
-    if (!m_textRenderer.init("/assets/RobotoMono-Bold.ttf", 20.0f)) {
+    if (!m_textRenderer.init("/assets/RobotoMono-Bold.ttf", 72.0f)) {
         return false;
     }
 
@@ -50,11 +50,11 @@ void Renderer::setTheme(const Theme& theme) {
     m_theme = theme;
 }
 
-float Renderer::calculateMinArcValue(const Ring& ring) {
+float Renderer::calculateMinArcValue(const Ring& ring, float scale) {
     // Calculate text properties
-    float ringThickness = ring.outerRadius - ring.innerRadius;
-    float textScale = ringThickness * 0.020f;
-    float radius = ring.outerRadius - m_textRenderer.getTextHeight(ring.valueText, textScale);
+    float ringThickness = ring.outerRadius * scale - ring.innerRadius * scale;
+    float textScale = ringThickness * 0.005f * scale;
+    float radius = ring.outerRadius * scale - m_textRenderer.getTextHeight(ring.valueText, textScale);
 
     // Calculate how much angular space the text needs
     float textWidth = m_textRenderer.getTextWidth(ring.valueText, textScale);
@@ -74,13 +74,16 @@ void Renderer::render(const PolarClock& clock) {
     glClearColor(bg.x, bg.y, bg.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Create a scale factor to make everything nicely fit to the screen.
+    float ring_scale = .9 / clock.getMaxRadius();
+
     // Enable blending for text
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Render arcs and labels with minimum arc sizes enforced
     for (const auto& ring : clock.getRings()) {
-        float minValue = calculateMinArcValue(ring);
+        float minValue = calculateMinArcValue(ring, ring_scale);
         float effectiveValue = std::max(ring.currentValue, minValue);
 
         // Interpolate color from bright (at 0) to base (at 1)
@@ -94,29 +97,29 @@ void Renderer::render(const PolarClock& clock) {
 
         // Render arc with effective value and interpolated color
         m_arcRenderer.renderArc(
-            ring.innerRadius, ring.outerRadius,
+            ring.innerRadius * ring_scale, ring.outerRadius * ring_scale,
             effectiveValue,
             arcColor,
             m_projection
         );
 
         // Render label
-        renderLabel(ring, effectiveValue);
+        renderLabel(ring, effectiveValue, ring_scale);
     }
 
     glDisable(GL_BLEND);
 }
 
-void Renderer::renderLabel(const Ring& ring, float effectiveValue) {
+void Renderer::renderLabel(const Ring& ring, float effectiveValue, float scale) {
     // Calculate text properties
-    float ringThickness = ring.outerRadius - ring.innerRadius;
-    float textScale = ringThickness * 0.020f;
+    float ringThickness = ring.outerRadius * scale - ring.innerRadius * scale;
+    float textScale = ringThickness * 0.005f * scale;
 
     std::string label = ring.valueText;
 
     // Position at center of ring thickness
     //float radius = (ring.innerRadius + ring.outerRadius) / 2.0f;
-    float radius = ring.outerRadius - m_textRenderer.getTextHeight(label, textScale);
+    float radius = ring.outerRadius * scale - m_textRenderer.getTextHeight(label, textScale);
 
     // Calculate how much angular space the text needs
     float textWidth = m_textRenderer.getTextWidth(label, textScale);

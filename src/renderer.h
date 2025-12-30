@@ -19,8 +19,8 @@ public:
     void setTheme(const Theme& theme);
 
 private:
-    void renderLabel(const Ring& ring, float effectiveValue);
-    float calculateMinArcValue(const Ring& ring);
+    void renderLabel(const Ring& ring, float effectiveValue, float scale);
+    float calculateMinArcValue(const Ring& ring, float scale);
 
     ArcRenderer m_arcRenderer;
     TextRenderer m_textRenderer;

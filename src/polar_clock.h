@@ -45,6 +45,8 @@ public:
     int getMonth() const { return m_month; }
     int getYear() const { return m_year; }
 
+    float getMaxRadius() const {return maximum_radius; }
+
 private:
     void updateTime();
     void updateRingValues();
@@ -66,6 +68,9 @@ private:
 
     // Animation speed
     float m_animationSpeed;
+
+    float maximum_radius;
+
 };
 
 } // namespace polarclock

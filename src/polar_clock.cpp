@@ -54,6 +54,13 @@ PolarClock::PolarClock()
     // currentValue stays at 0 so rings animate in on startup
     updateTime();
     updateRingValues();
+
+    maximum_radius = 0;
+    for(auto& ring : m_rings)
+    {
+        maximum_radius = std::max(maximum_radius, ring.outerRadius);
+    }
+
 }
 
 void PolarClock::setTheme(const Theme& theme) {
