@@ -1,0 +1,38 @@
+[
+{
+  "directory": "/home/goberhauser/Projects/PolarClock/build-web",
+  "command": "/home/goberhauser/Projects/emsdk/upstream/emscripten/em++  @CMakeFiles/PolarClock.dir/includes_CXX.rsp -std=gnu++17 -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=1 --preload-file /home/goberhauser/Projects/PolarClock/assets@/assets --preload-file /home/goberhauser/Projects/PolarClock/shaders@/shaders --shell-file /home/goberhauser/Projects/PolarClock/web/shell.html -o CMakeFiles/PolarClock.dir/src/main.cpp.o -c /home/goberhauser/Projects/PolarClock/src/main.cpp",
+  "file": "/home/goberhauser/Projects/PolarClock/src/main.cpp",
+  "output": "CMakeFiles/PolarClock.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/goberhauser/Projects/PolarClock/build-web",
+  "command": "/home/goberhauser/Projects/emsdk/upstream/emscripten/em++  @CMakeFiles/PolarClock.dir/includes_CXX.rsp -std=gnu++17 -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=1 --preload-file /home/goberhauser/Projects/PolarClock/assets@/assets --preload-file /home/goberhauser/Projects/PolarClock/shaders@/shaders --shell-file /home/goberhauser/Projects/PolarClock/web/shell.html -o CMakeFiles/PolarClock.dir/src/shader.cpp.o -c /home/goberhauser/Projects/PolarClock/src/shader.cpp",
+  "file": "/home/goberhauser/Projects/PolarClock/src/shader.cpp",
+  "output": "CMakeFiles/PolarClock.dir/src/shader.cpp.o"
+},
+{
+  "directory": "/home/goberhauser/Projects/PolarClock/build-web",
+  "command": "/home/goberhauser/Projects/emsdk/upstream/emscripten/em++  @CMakeFiles/PolarClock.dir/includes_CXX.rsp -std=gnu++17 -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=1 --preload-file /home/goberhauser/Projects/PolarClock/assets@/assets --preload-file /home/goberhauser/Projects/PolarClock/shaders@/shaders --shell-file /home/goberhauser/Projects/PolarClock/web/shell.html -o CMakeFiles/PolarClock.dir/src/renderer.cpp.o -c /home/goberhauser/Projects/PolarClock/src/renderer.cpp",
+  "file": "/home/goberhauser/Projects/PolarClock/src/renderer.cpp",
+  "output": "CMakeFiles/PolarClock.dir/src/renderer.cpp.o"
+},
+{
+  "directory": "/home/goberhauser/Projects/PolarClock/build-web",
+  "command": "/home/goberhauser/Projects/emsdk/upstream/emscripten/em++  @CMakeFiles/PolarClock.dir/includes_CXX.rsp -std=gnu++17 -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=1 --preload-file /home/goberhauser/Projects/PolarClock/assets@/assets --preload-file /home/goberhauser/Projects/PolarClock/shaders@/shaders --shell-file /home/goberhauser/Projects/PolarClock/web/shell.html -o CMakeFiles/PolarClock.dir/src/arc_renderer.cpp.o -c /home/goberhauser/Projects/PolarClock/src/arc_renderer.cpp",
+  "file": "/home/goberhauser/Projects/PolarClock/src/arc_renderer.cpp",
+  "output": "CMakeFiles/PolarClock.dir/src/arc_renderer.cpp.o"
+},
+{
+  "directory": "/home/goberhauser/Projects/PolarClock/build-web",
+  "command": "/home/goberhauser/Projects/emsdk/upstream/emscripten/em++  @CMakeFiles/PolarClock.dir/includes_CXX.rsp -std=gnu++17 -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=1 --preload-file /home/goberhauser/Projects/PolarClock/assets@/assets --preload-file /home/goberhauser/Projects/PolarClock/shaders@/shaders --shell-file /home/goberhauser/Projects/PolarClock/web/shell.html -o CMakeFiles/PolarClock.dir/src/polar_clock.cpp.o -c /home/goberhauser/Projects/PolarClock/src/polar_clock.cpp",
+  "file": "/home/goberhauser/Projects/PolarClock/src/polar_clock.cpp",
+  "output": "CMakeFiles/PolarClock.dir/src/polar_clock.cpp.o"
+},
+{
+  "directory": "/home/goberhauser/Projects/PolarClock/build-web",
+  "command": "/home/goberhauser/Projects/emsdk/upstream/emscripten/em++  @CMakeFiles/PolarClock.dir/includes_CXX.rsp -std=gnu++17 -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=1 --preload-file /home/goberhauser/Projects/PolarClock/assets@/assets --preload-file /home/goberhauser/Projects/PolarClock/shaders@/shaders --shell-file /home/goberhauser/Projects/PolarClock/web/shell.html -o CMakeFiles/PolarClock.dir/src/text_renderer.cpp.o -c /home/goberhauser/Projects/PolarClock/src/text_renderer.cpp",
+  "file": "/home/goberhauser/Projects/PolarClock/src/text_renderer.cpp",
+  "output": "CMakeFiles/PolarClock.dir/src/text_renderer.cpp.o"
+}
+]
