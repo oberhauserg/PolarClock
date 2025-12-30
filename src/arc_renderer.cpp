@@ -59,8 +59,8 @@ bool ArcRenderer::init() {
  * @param s1       Sine of the second angle.
  */
 static void pushQuad(std::vector<float>& vertices,
-                     float inner0, float outer0, float c0, float s0,
-                     float inner1, float outer1, float c1, float s1) {
+                     double inner0, double outer0, double c0, double s0,
+                     double inner1, double outer1, double c1, double s1) {
     // Triangle 1: inner0 -> outer0 -> inner1
     vertices.push_back(inner0 * c0);
     vertices.push_back(inner0 * s0);
@@ -105,26 +105,26 @@ static void pushQuad(std::vector<float>& vertices,
  * @param referenceAngle The angle of the arc's edge (used to calculate distances).
  */
 static void generateEndcap(std::vector<float>& vertices,
-                           float innerRadius, float outerRadius, float cr,
-                           float endcapStart, float endcapSize, float referenceAngle) {
+                           double innerRadius, double outerRadius, double cr,
+                           double endcapStart, double endcapSize, double referenceAngle) {
     const int numSegments = 12;
 
     for (int i = 0; i < numSegments; ++i) {
-        float t0 = static_cast<float>(i) / numSegments;
-        float t1 = static_cast<float>(i + 1) / numSegments;
+        double t0 = static_cast<float>(i) / numSegments;
+        double t1 = static_cast<float>(i + 1) / numSegments;
 
-        float a0 = endcapStart - t0 * endcapSize;
-        float a1 = endcapStart - t1 * endcapSize;
+        double a0 = endcapStart - t0 * endcapSize;
+        double a1 = endcapStart - t1 * endcapSize;
 
-        float c0 = std::cos(a0), s0 = std::sin(a0);
-        float c1 = std::cos(a1), s1 = std::sin(a1);
+        double c0 = std::cos(a0), s0 = std::sin(a0);
+        double c1 = std::cos(a1), s1 = std::sin(a1);
 
         // Calculate arc-length distance from the reference angle (arc edge)
         // This represents the "x" value in our circle equation
-        float a0OuterDist = outerRadius * std::abs(referenceAngle - a0) - cr;
-        float a1OuterDist = outerRadius * std::abs(referenceAngle - a1) - cr;
-        float a0InnerDist = innerRadius * std::abs(referenceAngle - a0) - cr;
-        float a1InnerDist = innerRadius * std::abs(referenceAngle - a1) - cr;
+        double a0OuterDist = outerRadius * std::abs(referenceAngle - a0) - cr;
+        double a1OuterDist = outerRadius * std::abs(referenceAngle - a1) - cr;
+        double a0InnerDist = innerRadius * std::abs(referenceAngle - a0) - cr;
+        double a1InnerDist = innerRadius * std::abs(referenceAngle - a1) - cr;
 
         // Only render if within the corner radius region
         if (a0InnerDist < cr && a1InnerDist < cr &&
@@ -132,10 +132,10 @@ static void generateEndcap(std::vector<float>& vertices,
             // Apply circle equation: y = sqrt(r² - x²) to find edge offset
             // For outer edge: radius decreases (inset toward center)
             // For inner edge: radius increases (inset away from center)
-            float outer0 = outerRadius - cr + std::sqrt(cr * cr - a0OuterDist * a0InnerDist);
-            float outer1 = outerRadius - cr + std::sqrt(cr * cr - a1OuterDist * a1InnerDist);
-            float inner0 = innerRadius + cr - std::sqrt(cr * cr - a0InnerDist * a0InnerDist);
-            float inner1 = innerRadius + cr - std::sqrt(cr * cr - a1InnerDist * a1InnerDist);
+            double outer0 = outerRadius - cr + std::sqrt(cr * cr - a0OuterDist * a0InnerDist);
+            double outer1 = outerRadius - cr + std::sqrt(cr * cr - a1OuterDist * a1InnerDist);
+            double inner0 = innerRadius + cr - std::sqrt(cr * cr - a0InnerDist * a0InnerDist);
+            double inner1 = innerRadius + cr - std::sqrt(cr * cr - a1InnerDist * a1InnerDist);
 
             pushQuad(vertices, inner0, outer0, c0, s0, inner1, outer1, c1, s1);
         }
@@ -161,39 +161,39 @@ static void generateEndcap(std::vector<float>& vertices,
  * @param endAngle    Arc sweep as a fraction of a full circle (0.0 to 1.0).
  * @param vertices    Output buffer to fill with vertex data (cleared first).
  */
-void ArcRenderer::generateArcGeometry(float innerRadius, float outerRadius, float endAngle,
+void ArcRenderer::generateArcGeometry(double innerRadius, double outerRadius, double endAngle,
                                        std::vector<float>& vertices) {
     vertices.clear();
 
     if (endAngle <= 0.001f) return;
 
-    float ringThickness = outerRadius - innerRadius;
-    float cr = ringThickness * 0.1f;  // Corner radius (20% of thickness)
+    double ringThickness = outerRadius - innerRadius;
+    double cr = ringThickness * 0.1;  // Corner radius (20% of thickness)
 
-    float arcStart = math::PI / 2.0f;  // 12 o'clock
-    float sweep = endAngle * math::TAU;
-    float arcEnd = arcStart - sweep;
+    double arcStart = math::PI / 2.0;  // 12 o'clock
+    double sweep = endAngle * math::TAU;
+    double arcEnd = arcStart - sweep;
 
     // Calculate angular size of endcaps using tangent offset
-    float endcapAngularSize = std::atan(cr / innerRadius);
+    double endcapAngularSize = std::atan(cr / innerRadius);
 
     // Main arc body runs between the two endcap regions
-    float mainStart = arcStart - endcapAngularSize;
-    float mainSweep = sweep - endcapAngularSize * 2.0f;
+    double mainStart = arcStart - endcapAngularSize;
+    double mainSweep = sweep - endcapAngularSize * 2.0;
 
     // Generate main arc body
     int numSegments = static_cast<int>(SEGMENTS * endAngle) + 1;
     numSegments = std::max(numSegments, 3);
 
-    float lastAngle = mainStart;
+    double lastAngle = mainStart;
     for (int i = 0; i < numSegments; ++i) {
-        float t1 = static_cast<float>(i + 1) / numSegments;
+        double t1 = static_cast<float>(i + 1) / numSegments;
 
-        float a0 = lastAngle;
-        float a1 = mainStart - t1 * mainSweep;
+        double a0 = lastAngle;
+        double a1 = mainStart - t1 * mainSweep;
 
-        float c0 = std::cos(a0), s0 = std::sin(a0);
-        float c1 = std::cos(a1), s1 = std::sin(a1);
+        double c0 = std::cos(a0), s0 = std::sin(a0);
+        double c1 = std::cos(a1), s1 = std::sin(a1);
 
         pushQuad(vertices, innerRadius, outerRadius, c0, s0,
                           innerRadius, outerRadius, c1, s1);
@@ -206,7 +206,7 @@ void ArcRenderer::generateArcGeometry(float innerRadius, float outerRadius, floa
                    arcStart, endcapAngularSize, arcStart);
 
     // Generate end endcap (rounded corners at arc end)
-    float endEndcapStart = mainStart - mainSweep;
+    double endEndcapStart = mainStart - mainSweep;
     generateEndcap(vertices, innerRadius, outerRadius, cr,
                    endEndcapStart, endcapAngularSize, arcEnd);
 }
@@ -260,7 +260,7 @@ void ArcRenderer::render(const PolarClock& clock, const math::Mat4& projection) 
  * @param color       RGB color for the arc.
  * @param projection  The projection matrix for coordinate transformation.
  */
-void ArcRenderer::renderArc(float innerRadius, float outerRadius, float value,
+void ArcRenderer::renderArc(double innerRadius, double outerRadius, double value,
                              const math::Vec3& color, const math::Mat4& projection) {
     if (value <= 0.001f) return;
 

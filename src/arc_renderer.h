@@ -16,11 +16,11 @@ public:
     void render(const PolarClock& clock, const math::Mat4& projection);
 
     // Render a single arc with explicit parameters
-    void renderArc(float innerRadius, float outerRadius, float value,
+    void renderArc(double innerRadius, double outerRadius, double value,
                    const math::Vec3& color, const math::Mat4& projection);
 
 private:
-    void generateArcGeometry(float innerRadius, float outerRadius, float endAngle,
+    void generateArcGeometry(double innerRadius, double outerRadius, double endAngle,
                              std::vector<float>& vertices);
 
     Shader m_shader;

@@ -48,7 +48,7 @@ PolarClock::PolarClock()
     m_rings[4].label = "SECONDS";
 
     // Set default theme
-    setTheme(createDefaultTheme());
+    setTheme(createBlueTheme());
 
     // Initialize time and target values
     // currentValue stays at 0 so rings animate in on startup

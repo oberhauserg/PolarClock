@@ -92,7 +92,7 @@ inline Theme createCoolTheme() {
 inline Theme createBlueTheme() {
     Theme theme;
     theme.name = "Blue";
-    theme.background = math::Vec3(0.910f, 0.922f, 0.937f);  // #E8ECEF light gray
+    theme.background = math::Vec3(0.04f, 0.04f, 0.06f);  // #0A0A0F
 
     // Deep blue #09479A (8, 70, 154)
     math::Vec3 deepBlue(0.031f, 0.275f, 0.604f);
