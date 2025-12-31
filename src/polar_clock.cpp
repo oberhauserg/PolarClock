@@ -117,14 +117,7 @@ void PolarClock::setValue(RingType type, float value, int text_value)
                     }
                     break;
                 case RingType::DayOfMonth:
-                    if(text_value - 1 == 1)
-                    {
-                        ring.valueText = pad2(text_value - 1) + " day";
-                    }
-                    else
-                    {
-                        ring.valueText = pad2(text_value - 1) + " days";
-                    }
+                    ring.valueText = "day " + pad2(text_value);
                     break;
                 case RingType::Month:
                     static const char* monthNames[] = {
