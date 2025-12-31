@@ -1,5 +1,4 @@
 #include "arc_renderer.h"
-#include "resource_path.h"
 #include <vector>
 #include <cmath>
 
@@ -25,8 +24,7 @@ ArcRenderer::~ArcRenderer() {
  * @return true if initialization succeeded, false otherwise.
  */
 bool ArcRenderer::init() {
-    if (!m_shader.loadFromFiles(getResourcePath("shaders/arc.vert"),
-                                   getResourcePath("shaders/arc.frag"))) {
+    if (!m_shader.loadFromFiles("shaders/arc.vert", "shaders/arc.frag")) {
         return false;
     }
 

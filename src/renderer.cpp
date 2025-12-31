@@ -1,5 +1,4 @@
 #include "renderer.h"
-#include "resource_path.h"
 #include <cmath>
 
 namespace polarclock {
@@ -20,7 +19,7 @@ bool Renderer::init(int width, int height) {
         return false;
     }
 
-    if (!m_textRenderer.init(getResourcePath("assets/RobotoMono-Bold.ttf"), 72.0f)) {
+    if (!m_textRenderer.init("assets/RobotoMono-Bold.ttf", 72.0f)) {
         return false;
     }
 

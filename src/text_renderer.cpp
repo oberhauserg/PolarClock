@@ -1,6 +1,5 @@
 #include "text_renderer.h"
-#include "resource_path.h"
-#include <fstream>
+#include "asset_loader.h"
 #include <vector>
 #include <iostream>
 #include <cstring>
@@ -29,17 +28,12 @@ TextRenderer::~TextRenderer() {
 bool TextRenderer::init(const std::string& fontPath, float fontSize) {
     m_fontSize = fontSize;
 
-    // Load font file
-    std::ifstream fontFile(fontPath, std::ios::binary | std::ios::ate);
-    if (!fontFile.is_open()) {
-        std::cerr << "Failed to open font file: " << fontPath << std::endl;
+    // Load font file via AssetLoader
+    std::vector<unsigned char> fontBuffer;
+    if (!AssetLoader::instance().loadFile(fontPath, fontBuffer)) {
+        std::cerr << "Failed to load font file: " << fontPath << std::endl;
         return false;
     }
-
-    size_t fileSize = fontFile.tellg();
-    fontFile.seekg(0);
-    std::vector<unsigned char> fontBuffer(fileSize);
-    fontFile.read(reinterpret_cast<char*>(fontBuffer.data()), fileSize);
 
     // Initialize stb_truetype
     stbtt_fontinfo fontInfo;
@@ -113,8 +107,7 @@ bool TextRenderer::init(const std::string& fontPath, float fontSize) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     // Load shader
-    if (!m_shader.loadFromFiles(getResourcePath("shaders/text.vert"),
-                                   getResourcePath("shaders/text.frag"))) {
+    if (!m_shader.loadFromFiles("shaders/text.vert", "shaders/text.frag")) {
         return false;
     }
 

@@ -1,12 +1,15 @@
 #include "shader.h"
-#include <fstream>
-#include <sstream>
+#include "asset_loader.h"
 #include <iostream>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #define SHADER_LOG(msg) emscripten_log(EM_LOG_CONSOLE, "Shader: %s", msg)
 #define SHADER_ERR(msg) emscripten_log(EM_LOG_ERROR, "Shader: %s", msg)
+#elif defined(__ANDROID__)
+#include <android/log.h>
+#define SHADER_LOG(msg) __android_log_print(ANDROID_LOG_INFO, "Shader", "%s", msg)
+#define SHADER_ERR(msg) __android_log_print(ANDROID_LOG_ERROR, "Shader", "%s", msg)
 #else
 #define SHADER_LOG(msg) std::cout << "Shader: " << msg << std::endl
 #define SHADER_ERR(msg) std::cerr << "Shader: " << msg << std::endl
@@ -22,24 +25,21 @@ Shader::~Shader() {
 
 bool Shader::loadFromFiles(const std::string& vertPath, const std::string& fragPath) {
     SHADER_LOG(("Loading: " + vertPath).c_str());
-    std::ifstream vertFile(vertPath);
-    std::ifstream fragFile(fragPath);
 
-    if (!vertFile.is_open()) {
-        SHADER_ERR(("Failed to open vertex shader: " + vertPath).c_str());
-        return false;
-    }
-    if (!fragFile.is_open()) {
-        SHADER_ERR(("Failed to open fragment shader: " + fragPath).c_str());
+    std::string vertSource, fragSource;
+
+    if (!AssetLoader::instance().loadTextFile(vertPath, vertSource)) {
+        SHADER_ERR(("Failed to load vertex shader: " + vertPath).c_str());
         return false;
     }
 
-    std::stringstream vertStream, fragStream;
-    vertStream << vertFile.rdbuf();
-    fragStream << fragFile.rdbuf();
+    if (!AssetLoader::instance().loadTextFile(fragPath, fragSource)) {
+        SHADER_ERR(("Failed to load fragment shader: " + fragPath).c_str());
+        return false;
+    }
 
     SHADER_LOG("Shader files loaded, compiling...");
-    return loadFromSource(vertStream.str(), fragStream.str());
+    return loadFromSource(vertSource, fragSource);
 }
 
 bool Shader::loadFromSource(const std::string& vertSource, const std::string& fragSource) {

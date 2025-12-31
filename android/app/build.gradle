@@ -1,0 +1,69 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.polarclock.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.polarclock.app"
+        minSdk 24  // Android 7.0 - required for OpenGL ES 3.0 wide support
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17"
+                arguments "-DANDROID_STL=c++_shared",
+                          "-DANDROID_TOOLCHAIN=clang"
+                abiFilters 'arm64-v8a', 'x86_64'
+            }
+        }
+
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+        }
+        debug {
+            debuggable true
+            jniDebuggable true
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+// Copy assets to the correct location for APK packaging
+task copyAssets(type: Copy) {
+    from '../../assets'
+    into 'src/main/assets/assets'
+}
+
+task copyShaders(type: Copy) {
+    from '../../shaders'
+    into 'src/main/assets/shaders'
+}
+
+preBuild.dependsOn copyAssets, copyShaders
+
+dependencies {
+    // No Java dependencies needed for pure native activity
+}

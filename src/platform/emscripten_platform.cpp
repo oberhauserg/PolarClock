@@ -30,6 +30,7 @@ bool EmscriptenPlatform::init(int width, int height, const char* title) {
 
     // Get canvas size from HTML
     emscripten_get_canvas_element_size("#canvas", &m_width, &m_height);
+    printf("Initial window size: %d %d\n", m_width, m_height);
     if (m_width == 0 || m_height == 0) {
         m_width = width;
         m_height = height;

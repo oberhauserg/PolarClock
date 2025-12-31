@@ -9,6 +9,13 @@ inline std::string getResourcePath(const std::string& relativePath) {
     return "/" + relativePath;
 }
 
+#elif defined(__ANDROID__)
+
+// Android loads assets via AAssetManager - paths are relative to assets/ folder
+inline std::string getResourcePath(const std::string& relativePath) {
+    return relativePath;
+}
+
 #else
 
 #ifdef __linux__

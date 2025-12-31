@@ -43,6 +43,7 @@ int main() {
         int newWidth, newHeight;
         platform->getFramebufferSize(newWidth, newHeight);
         if (newWidth != lastWidth || newHeight != lastHeight) {
+            std::cout << "Size updated to " << newWidth << " " << newHeight << std::endl;
             lastWidth = newWidth;
             lastHeight = newHeight;
             renderer.resize(newWidth, newHeight);

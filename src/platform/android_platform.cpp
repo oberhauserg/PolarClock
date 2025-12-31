@@ -2,6 +2,9 @@
 
 #ifdef __ANDROID__
 
+#include <android_native_app_glue.h>
+#include "../asset_loader.h"
+
 namespace polarclock {
 
 AndroidPlatform::AndroidPlatform() = default;
@@ -12,12 +15,26 @@ AndroidPlatform::~AndroidPlatform() {
 
 bool AndroidPlatform::init(int width, int height, const char* /* title */) {
     // On Android, we can't create a window ourselves - it's provided by the system
-    // The actual initialization happens in setNativeWindow() when the window is ready
+    // The actual EGL initialization happens in setNativeWindow() when the window is ready
     m_width = width;
     m_height = height;
     m_running = true;
+    m_initialized = true;
     LOGI("AndroidPlatform initialized (waiting for native window)");
     return true;
+}
+
+void AndroidPlatform::setApp(struct android_app* app) {
+    m_app = app;
+    if (app && app->activity) {
+        setAssetManager(app->activity->assetManager);
+    }
+}
+
+void AndroidPlatform::setAssetManager(AAssetManager* assetManager) {
+    m_assetManager = assetManager;
+    AssetLoader::instance().setAssetManager(assetManager);
+    LOGI("AssetManager configured");
 }
 
 void AndroidPlatform::setNativeWindow(ANativeWindow* window) {
@@ -25,6 +42,7 @@ void AndroidPlatform::setNativeWindow(ANativeWindow* window) {
 
     // Clean up old surface if we're switching windows
     if (m_surface != EGL_NO_SURFACE) {
+        eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroySurface(m_display, m_surface);
         m_surface = EGL_NO_SURFACE;
     }
@@ -42,13 +60,13 @@ void AndroidPlatform::setNativeWindow(ANativeWindow* window) {
         // Create window surface
         m_surface = eglCreateWindowSurface(m_display, m_config, window, nullptr);
         if (m_surface == EGL_NO_SURFACE) {
-            LOGE("Failed to create EGL window surface");
+            LOGE("Failed to create EGL window surface: 0x%x", eglGetError());
             return;
         }
 
         // Make context current
         if (!eglMakeCurrent(m_display, m_surface, m_surface, m_context)) {
-            LOGE("Failed to make EGL context current");
+            LOGE("Failed to make EGL context current: 0x%x", eglGetError());
             return;
         }
 
@@ -58,6 +76,7 @@ void AndroidPlatform::setNativeWindow(ANativeWindow* window) {
 
         LOGI("EGL surface created: %dx%d", m_width, m_height);
         LOGI("OpenGL ES: %s", glGetString(GL_VERSION));
+        LOGI("Renderer: %s", glGetString(GL_RENDERER));
 
         m_lastTime = std::chrono::high_resolution_clock::now();
     }
@@ -74,12 +93,12 @@ bool AndroidPlatform::initEGL() {
     // Initialize EGL
     EGLint major, minor;
     if (!eglInitialize(m_display, &major, &minor)) {
-        LOGE("eglInitialize failed");
+        LOGE("eglInitialize failed: 0x%x", eglGetError());
         return false;
     }
     LOGI("EGL initialized: %d.%d", major, minor);
 
-    // Choose config
+    // Choose config with MSAA
     const EGLint configAttribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
@@ -97,6 +116,7 @@ bool AndroidPlatform::initEGL() {
     EGLint numConfigs;
     if (!eglChooseConfig(m_display, configAttribs, &m_config, 1, &numConfigs) || numConfigs == 0) {
         // Fallback without MSAA
+        LOGI("MSAA not available, trying without...");
         const EGLint fallbackAttribs[] = {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
             EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
@@ -110,7 +130,6 @@ bool AndroidPlatform::initEGL() {
             LOGE("eglChooseConfig failed");
             return false;
         }
-        LOGI("Using fallback EGL config (no MSAA)");
     }
 
     // Create OpenGL ES 3.0 context
@@ -120,10 +139,11 @@ bool AndroidPlatform::initEGL() {
     };
     m_context = eglCreateContext(m_display, m_config, EGL_NO_CONTEXT, contextAttribs);
     if (m_context == EGL_NO_CONTEXT) {
-        LOGE("eglCreateContext failed");
+        LOGE("eglCreateContext failed: 0x%x", eglGetError());
         return false;
     }
 
+    LOGI("EGL context created successfully");
     return true;
 }
 
@@ -147,12 +167,14 @@ void AndroidPlatform::shutdown() {
     terminateEGL();
     m_window = nullptr;
     m_running = false;
+    m_initialized = false;
 }
 
 void AndroidPlatform::onPause() {
+    LOGI("onPause");
     m_paused = true;
     // Release the surface but keep the context
-    if (m_surface != EGL_NO_SURFACE) {
+    if (m_surface != EGL_NO_SURFACE && m_display != EGL_NO_DISPLAY) {
         eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroySurface(m_display, m_surface);
         m_surface = EGL_NO_SURFACE;
@@ -160,45 +182,20 @@ void AndroidPlatform::onPause() {
 }
 
 void AndroidPlatform::onResume() {
+    LOGI("onResume");
     m_paused = false;
     // Surface will be recreated when setNativeWindow is called
 }
 
 void AndroidPlatform::onDestroy() {
+    LOGI("onDestroy");
     m_running = false;
 }
 
-void AndroidPlatform::runMainLoop(std::function<void(float deltaTime)> frameCallback) {
-    // On Android, the main loop is driven by android_native_app_glue
-    // This would typically be called from the app's main loop handler
-    //
-    // Example usage in android_main:
-    //
-    // while (!platform->shouldClose()) {
-    //     int events;
-    //     struct android_poll_source* source;
-    //     while (ALooper_pollAll(platform->isPaused() ? -1 : 0, nullptr, &events, (void**)&source) >= 0) {
-    //         if (source) source->process(app, source);
-    //         if (app->destroyRequested) platform->onDestroy();
-    //     }
-    //     if (!platform->isPaused() && platform->hasValidSurface()) {
-    //         // Calculate delta time and call frame callback
-    //         platform->frame(frameCallback);
-    //     }
-    // }
-
-    // For now, we just run until stopped
-    while (m_running && !m_paused && m_surface != EGL_NO_SURFACE) {
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float deltaTime = std::chrono::duration<float>(currentTime - m_lastTime).count();
-        m_lastTime = currentTime;
-
-        if (deltaTime > 0.1f) {
-            deltaTime = 0.1f;
-        }
-
-        frameCallback(deltaTime);
-    }
+void AndroidPlatform::runMainLoop(std::function<void(float deltaTime)> /* frameCallback */) {
+    // On Android, the main loop is driven by android_main.cpp
+    // This method is not used - the loop is in android_main()
+    LOGI("runMainLoop called - note: Android uses external main loop");
 }
 
 void AndroidPlatform::getFramebufferSize(int& width, int& height) {
@@ -211,14 +208,13 @@ void AndroidPlatform::getFramebufferSize(int& width, int& height) {
 }
 
 void AndroidPlatform::swapBuffers() {
-    if (m_surface != EGL_NO_SURFACE) {
+    if (m_surface != EGL_NO_SURFACE && m_display != EGL_NO_DISPLAY) {
         eglSwapBuffers(m_display, m_surface);
     }
 }
 
 void AndroidPlatform::pollEvents() {
-    // Event polling is handled by android_native_app_glue in the main loop
-    // Individual events come through the activity callbacks
+    // Event polling is handled by android_native_app_glue in android_main()
 }
 
 bool AndroidPlatform::shouldClose() {
