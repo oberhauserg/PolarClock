@@ -120,5 +120,36 @@ inline Theme createBlueTheme() {
     return theme;
 }
 
+inline Theme createPurpleTheme() {
+    Theme theme;
+    theme.name = "Blue";
+    theme.background = math::Vec3(0.04f, 0.04f, 0.06f);  // #0A0A0F
+
+    // #CC5FEA (204, 95, 234)
+    math::Vec3 pink(204.0/256.0, 95.0/256.0, 234.0/256.0);
+    // #B41DDE (180, 29, 22)
+    math::Vec3 purple(180.0/256.0, 29.0/256.0, 22.0/256.0);
+
+    // Assign colors: bright (start/reset) -> base (end/full)
+    theme.seconds.bright = pink;
+    theme.seconds.base = purple;
+
+    theme.minutes.bright = pink;
+    theme.minutes.base = purple;
+
+    theme.hours.bright = pink;
+    theme.hours.base = purple;
+
+    theme.dayOfMonth.bright = pink;
+    theme.dayOfMonth.base = purple;
+
+    theme.month.bright = pink;
+    theme.month.base = purple;
+
+    theme.textColor = math::Vec3(0.910f, 0.922f, 0.937f);  // Light for contrast on dark arcs
+
+    return theme;
+}
+
 
 } // namespace polarclock
