@@ -34,6 +34,7 @@ int main() {
     // Track last known size for resize detection
     int lastWidth = width;
     int lastHeight = height;
+    renderer.resize(width, height);
 
     std::cout << "Starting main loop..." << std::endl;
 
